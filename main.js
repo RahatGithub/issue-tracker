@@ -6,7 +6,7 @@ function submitIssue(e) {
   const severity = getInputValue('issueSeverity');
   const assignedTo = getInputValue('issueAssignedTo');
   const id = Math.floor(Math.random()*100000000) + '';
-  const status = 'Open';
+  let status = 'Open';
 
   const issue = { id, description, severity, assignedTo, status };
   let issues = [];
@@ -15,6 +15,9 @@ function submitIssue(e) {
   }
   issues.push(issue);
   localStorage.setItem('issues', JSON.stringify(issues));
+  // localStorage.setItem('totalIssues', JSON.stringify(issues.length))
+  // let openedIssues = issues.filter(issue => issue.status == 'Open');
+  // localStorage.setItem('openedIssues', JSON.stringify(openedIssues.length))
 
   document.getElementById('issueInputForm').reset();
   fetchIssues();
@@ -23,7 +26,7 @@ function submitIssue(e) {
 
 const closeIssue = id => {
   const issues = JSON.parse(localStorage.getItem('issues'));
-  const currentIssue = issues.find(issue => issue.id === id);
+  const currentIssue = issues.find(issue => issue.id == id);
   currentIssue.status = 'Closed';
   localStorage.setItem('issues', JSON.stringify(issues));
   fetchIssues();
@@ -31,26 +34,38 @@ const closeIssue = id => {
 
 const deleteIssue = id => {
   const issues = JSON.parse(localStorage.getItem('issues'));
-  const remainingIssues = issues.filter( issue.id !== id )
+  const remainingIssues = issues.filter(issue => issue.id != id )
   localStorage.setItem('issues', JSON.stringify(remainingIssues));
+  fetchIssues();
 }
 
 const fetchIssues = () => {
   const issues = JSON.parse(localStorage.getItem('issues'));
+  const totalIssues = issues.length;
+  const openedIssuesCollection = issues.filter(issue => issue.status == 'Open');
+  const openedIssues = openedIssuesCollection.length; 
+  document.getElementById('openedIssues').innerText = openedIssues;
+  document.getElementById('totalIssues').innerText = totalIssues;
+
   const issuesList = document.getElementById('issuesList');
   issuesList.innerHTML = '';
 
   for (var i = 0; i < issues.length; i++) {
     const {id, description, severity, assignedTo, status} = issues[i];
-
+    let extraClass = "";
+    if (status == 'Closed'){
+      extraClass = "lineThrough";
+    }
     issuesList.innerHTML +=   `<div class="well">
                               <h6>Issue ID: ${id} </h6>
                               <p><span class="label label-info"> ${status} </span></p>
-                              <h3> ${description} </h3>
+                              <h3 class="${extraClass}"> ${description} </h3>
                               <p><span class="glyphicon glyphicon-time"></span> ${severity}</p>
                               <p><span class="glyphicon glyphicon-user"></span> ${assignedTo}</p>
-                              <a href="#" onclick="setStatusClosed(${id})" class="btn btn-warning">Close</a>
+                              <a href="#" onclick="closeIssue(${id})" class="btn btn-warning">Close</a>
                               <a href="#" onclick="deleteIssue(${id})" class="btn btn-danger">Delete</a>
                               </div>`;
   }
 }
+
+
